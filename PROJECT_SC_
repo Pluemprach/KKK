@@ -1,0 +1,103 @@
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler,MinMaxScaler
+from sklearn.cluster import MeanShift
+
+# Import Data
+data = {
+    'AAPL':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/AAPL%2C%201D.csv',
+    'SPX':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/SPX%2C%201D.csv',
+    'USOIL':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/USOIL%2C%201D.csv',
+    'XAUUSD':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/XAUUSD%2C%201D.csv',
+    'USDJPY':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/USDJPY%2C%201D.csv',
+    'USDTHB':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/USDTHB%2C%201D.csv',
+    'EURUSD':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/EURUSD%2C%201D.csv',
+    'BTCUSD':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/BTCUSD%2C%201D.csv',
+    'ETHUSD':'https://raw.githubusercontent.com/Pluemprach/Kuy/main/ETHUSD%2C%201D.csv'
+    }
+
+def df(x):
+    df = pd.read_csv(data[x])
+    return df
+
+aapl = df('AAPL')
+spx = df('SPX')
+usoil = df('USOIL')
+xauusd = df('XAUUSD')
+usdjpy = df('USDJPY')
+usdthb = df('USDTHB')
+eurusd = df('EURUSD')
+btcusd = df('BTCUSD')
+ethusd = df('ETHUSD')
+
+def clustering_algo(X,bandwidths):
+
+    # Extract features for clustering
+    features = X[['close']].values
+
+    # Data Preprocessing
+    
+    scaler = StandardScaler()
+    features_scaled = scaler.fit_transform(features)
+
+    # Fit Mean Shift clustering algorithm
+    ms = MeanShift(bandwidth=bandwidths)
+    ms.fit(features_scaled)
+
+    # Get cluster centers
+    scaled_cluster_centers = ms.cluster_centers_
+    cluster_centers = scaler.inverse_transform(scaled_cluster_centers) # Inverse transform to original scale
+    labels = ms.labels_
+    X['Cluster'] = labels
+
+    plt.figure(figsize=(20, 5))
+    sns.scatterplot(data=X, x='date', y='close', hue='Cluster', palette='rainbow', legend='full', alpha=0.5)
+
+    for cluster in np.unique(labels):
+        cluster_mean = np.mean(X.loc[X['Cluster'] == cluster, 'close'])
+        cluster_color = sns.color_palette('rainbow', len(np.unique(labels)))[cluster]
+        plt.axhline(y=cluster_mean, color=cluster_color, linestyle='--', linewidth=0.5)
+
+    plt.title("Price cluster with Cluster Labels")
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.legend(title='Cluster')
+    plt.grid(True)
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(15)) 
+    plt.show()
+
+    print("Cluster Center")
+    for i, center in enumerate(cluster_centers):
+        print(f"Cluster {i}: {center[0]:.4f}")
+
+i = 0.2
+
+print("\nAAPL")
+clustering_algo(aapl,i)
+
+print("\nSPX")
+clustering_algo(spx,i)
+
+print("\nUSOIL")
+clustering_algo(usoil,i)
+
+print("\nXAUUSD")
+clustering_algo(xauusd,i)
+
+print("\nUSDJPY")
+clustering_algo(usdjpy,i)
+
+print("\nUSDTHB")
+clustering_algo(usdthb,i)
+
+print("\nEURUSD")
+clustering_algo(eurusd,i)
+
+print("\nBTCUSD")
+clustering_algo(btcusd,i)
+
+print("\nETHUSD")
+clustering_algo(ethusd,i)
